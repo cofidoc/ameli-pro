@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        box-sizing: border-box;
+      }
+      p {
+        margin: 0;
+        padding: 0;
+        margin-bottom: 3px;
+      }
+      #form {
+        display: flex;
+        flex-direction: column;
+        max-width: 700px;
+        width: 99%;
+      }
+      label {
+        width: 100%;
+      }
+      label p {
+        font-weight: bold;
+      }
+      input {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        width: 90%;
+      }
+      .catpcha-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 95%;
+      }
+      #catpcha {
+        width: 60%;
+      }
+      .btn {
+        display: inline-block;
+        margin-bottom: 0;
+        font-weight: 400;
+        text-align: center;
+        vertical-align: middle;
+        touch-action: manipulation;
+        cursor: pointer;
+        background-image: none;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857;
+        border-radius: 4px;
+        user-select: none;
+        padding-left: 15px;
+        padding-right: 15px;
+        height: 34px;
+        border-radius: 100px;
+        text-align: center;
+        font-size: 0.81rem;
+        text-transform: uppercase;
+        color: #fff;
+        background-color: #0087cf;
+
+        margin-top: 10px;
+      }
+      #reload {
+        background-color: #18cf00;
+      }
+      .btn-submit {
+        width: 70%;
+      }
+
+      .error {
+        margin-top: 10px;
+        color: red;
+      }
+      #patients {
+        visibility: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form id="form" action="#">
+      <label>
+        <p>Saisissez votre NIR</p>
+        <input id="nir" placeholder="nir" autocomplete="off" />
+      </label>
+      <div class="catpcha-container">
+        <label>
+          <p>Code de sécurité</p>
+          <input id="catpcha" placeholder="catpcha" autocomplete="off" />
+        </label>
+        <img src="" id="img-catpcha" alt="catpcha" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between">
+        <button class="btn" id="reload">Recharger</button>
+        <button class="btn btn-submit">Valider</button>
+      </div>
+
+      <p class="error" id="error"></p>
+    </form>
+
+    <code id="patients"></code>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"
+      integrity="sha512-WL6WGKMPBiM9PnHRYIn5YEtq0Z8XP4fkVb4qy7PP4vhmYQErJ/dySyXuFIMDf1eEYCXCrQrMJfkNwKc9gsjTjA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      const socket = io();
+
+      const parsedUrl = new URL(window.location.href);
+      const username = parsedUrl.searchParams.get("username");
+      const password = parsedUrl.searchParams.get("password");
+
+      const form = document.getElementById("form");
+      const nirInput = document.getElementById("nir");
+      const captchaInput = document.getElementById("catpcha");
+      const imgCatpcha = document.getElementById("img-catpcha");
+      const patientsEl = document.getElementById("patients");
+      const reloadBtn = document.getElementById("reload");
+      const errorEl = document.getElementById("error");
+
+      reloadBtn.addEventListener("click", () => {
+        location.reload();
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const captcha = captchaInput.value;
+        const nir = nirInput.value;
+        if (captcha && nir) {
+          socket.emit("getCaptcha", { username, password, captcha, nir });
+          captchaInput.value = "";
+        }
+      });
+
+      socket.on("urlCaptcha", function (urlCaptcha) {
+        console.log({ urlCaptcha });
+        imgCatpcha.src = urlCaptcha;
+      });
+
+      socket.on("patients", function (patients) {
+        console.log({ patients });
+        patientsEl.innerHTML = JSON.stringify(patients);
+      });
+
+      socket.on("error", function (err) {
+        errorEl.innerHTML = "Erreur Catpcha";
+        console.log({ err });
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>
