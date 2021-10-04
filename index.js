@@ -3,15 +3,24 @@ const { getPatient } = require("./getPatient");
 
 const app = require("express")();
 const server = require("http").Server(app);
-const io = require("socket.io")(server);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+const cors = require("cors");
 
 // https://infi-mobile.ew.r.appspot.com/?username=312555014&password=3199931z
 // const username = "312555014";
 // const password = "3199931z";
 // const nir = "187079202603071";
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const AMELI_PRO_URL = "https://authps-espacepro.ameli.fr/";
+
+app.use(cors({ origin: "*" }));
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/ameli.html");
